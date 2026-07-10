@@ -32,10 +32,6 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
   }
 
   initialization {
-    user_account {
-      username = "administrator"
-      password = "password"
-    }
     user_data_file_id = proxmox_virtual_environment_file.user_data.id
   }
 
@@ -64,7 +60,27 @@ resource "proxmox_virtual_environment_file" "user_data" {
     file_name = "enable-password-auth.yaml"
     data      = <<-EOF
     #cloud-config
-    ssh_pwauth: true
+    users:
+      - name: administrator
+        groups: sudo
+        shell: /bin/bash
+        lock_passwd: false
+        sudo: ALL=(ALL) NOPASSWD:ALL
+    chpasswd:
+      list: |
+        administrator:password
+      expire: false
+    hostname: test-ubuntu
+    timezone: Europe/London
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - net-tools
+      - curl
+    runcmd:
+      - systemctl enable qemu-guest-agent
+      - systemctl start qemu-guest-agent
+      - echo "done" > /tmp/cloud-config.done
     EOF
   }
 }
