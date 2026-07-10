@@ -28,7 +28,10 @@ ice-scenarios/
 │   └── outputs.tf
 │
 └── scenarios/
-    ├── 01-firewall-conflict/    # Exception: no tf/, acts on global's firewall
+    ├── 01-firewall-conflict/    # Isolated Terraform instance for this scenario
+    │   ├── tf/
+    │   │   ├── managed.tf       # Resources under ICE's contract
+    │   │   └── unmanaged.tf     # Resources excluded from ICE's contract
     │   └── playbook.yml
     │
     └── 02-k8s-conflict/
