@@ -2,7 +2,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.86.0"
+      version = "0.111.0"
     }
   }
 }
@@ -14,7 +14,7 @@ provider "proxmox" {
   password = var.password
   ssh {
     agent    = false
-    username = "root@pam"
+    username = "root"
     password = var.password
   }
 }
