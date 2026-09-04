@@ -1,14 +1,11 @@
 
 resource "ice_config" "main" {
   system {
-    name     = "postgres"
-    host     = proxmox_virtual_environment_vm.postgres_db.ipv4_addresses[1][0]
-    username = "administrator"
-    password = "password"
+    name = "postgres"
 
     capability {
-      name = "max_connections_sufficient"
-      cmd  = "grep -q '^max_connections = 100' /etc/postgresql/*/main/postgresql.conf"
+      name  = "max_connections_sufficient"
+      state = var.actual_max_connections >= 100
     }
   }
 
