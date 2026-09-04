@@ -12,7 +12,7 @@ Scenarios are configured as isolated Terraform modules. Within each scenario/mod
 ## Setup
 
 1. **Setup Proxmox**: Install Proxmox Virtual Environment following the [official documentation](https://pve.proxmox.com/pve-docs/chapter-pve-installation.html).
-2. **Setup ICE**: Install and run ICE locally following the [official documentation]().
+2. **Setup ICE**: Install and run ICE locally following the [official documentation](github.com/samcole8/infrastructure-contracts-engine).
 2. **Configure the global instance**: Add the IP address and root password of the Proxmox instance in `global/main.tfvars`, e.g.:
    
     ```
