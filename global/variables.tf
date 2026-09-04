@@ -17,3 +17,15 @@ variable "node_name" {
   default     = "pve"
   sensitive   = true
 }
+
+variable "snippets_datastore" {
+  type        = string
+  description = "Datastore for cloud init files"
+  default     = "terraform-snippets"
+}
+
+variable "aws_region" {
+  description = "AWS region for the Policy-Adjacent Drift scenario"
+  type        = string
+  default     = "eu-west-2"
+}
