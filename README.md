@@ -1,46 +1,36 @@
 # ice-scenarios
 
-*Note: This README reflects the intended operational state of the repository. Functionality may be partial or broken.*
-
 This repository contains deployable test scenarios for the [infrastructure-contracts-engine](https://github.com/samcole8/infrastructure-contracts-engine) (ICE).
 
 ## Layout
 
-Deployment follows an IaC-based approach, split across two levels of Terraform control:
+Scenarios are configured as isolated Terraform modules. Within each scenario/module, resources are split by contract scope:
 
-1. The **global** instance provisions the Proxmox node itself. This is shared infrastructure and is not torn down between scenario runs.
-2. Each **scenario** instance provisions its own isolated infrastructure on top of that node, independently of every other scenario. Each scenario also deploys [ICE](https://github.com/samcole8/infrastructure-contracts-engine) and configures the rules relevant to that scenario, placing its systems in a contract-conformant state.
+- **`unmanaged.tf`**: simulation of imperatively provisioned infrastructure.
+- **`managed.tf`**: simulation of declaratively provisioned Terraform-managed infrastructure, including `ice_config` resources that may reference imperative infrastructure.
 
-Within each scenario's `tf/` directory, resources are split by contract scope:
+## Setup
 
-- **`managed.tf`**: resources treated as Terraform-managed declaratively provisioned infrastructure.
-- **`unmanaged.tf`**: resources treated as imperatively provisioned infrastructure.
+1. **Setup Proxmox**: Install Proxmox Virtual Environment following the [official documentation](https://pve.proxmox.com/pve-docs/chapter-pve-installation.html).
+2. **Setup ICE**: Install and run ICE locally following the [official documentation]().
+2. **Configure the global instance**: Add the IP address and root password of the Proxmox instance in `global/main.tfvars`, e.g.:
+   
+    ```
+    password = "password"
+    ip       = "192.168.122.230:8006"
+    ```
+3. **Deploy the template instance**: Execute `terraform init` and `terraform apply`. 
 
-Once scenarios are deployed, two types of event can be enacted to test the engine:
+### Standard (Proxmox) Scenarios
 
-- **Imperative** actions that place systems into non-conformant states are executed using `playbook.yml` where appropriate, which should trigger the expected contract violations and notification events.
-- **Declarative** modifications that place systems into non-conformant states exist as commented code blocks that can be swapped into `managed.tf` to trigger the expected contract violations and prevent Terraform from deploying.
+1. `global/main.tf` contains several module references, some of which are block commented. To deploy a scenario, uncomment the module and run terraform apply. You should only run one scenario at a time, and the template should remain uncommented.
 
-```
-ice-scenarios/
-├── global/                     # Proxmox node: host, storage, networking, firewall
-│   ├── main.tf
-│   └── outputs.tf
-│
-└── scenarios/
-    ├── 01-firewall-conflict/    # Isolated Terraform instance for this scenario
-    │   ├── tf/
-    │   │   ├── managed.tf       # Resources under ICE's contract
-    │   │   └── unmanaged.tf     # Resources excluded from ICE's contract
-    │   └── playbook.yml
-    │
-    └── 02-k8s-conflict/
-        ├── tf/                  # Isolated Terraform instance for this scenario
-        │   ├── managed.tf       # Resources under ICE's contract
-        │   └── unmanaged.tf     # Resources excluded from ICE's contract
-        └── playbook.yml
-```
+2. Some scenarios contain a bash script called `diverge.sh` which represents a change that will cause the engine to report a failure. Some scenarios have comments in `managed.tf` that describe a Terraform-side change that should cause a failure to be reported as a warning by the provider. These are not necessarily the only methods to induce divergence.
 
-## Resetting scenarios
+3. Once finished with a scenario, use `terraform destroy -target scenario_module` to destroy the scenario. You can then recomment it and try a different scenario.
 
-Scenarios should be executed independently and destroyed after each run by executing `terraform destroy` followed by `terraform apply` within the scenario's own `tf/` directory.
+Some scenarios have additional testing requirements:
+
+- `policy_adjacent_drift` depends on Amazon Web Services and requires the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables to be set accordingly.
+- `iac_side_divergence` does not use `diverge.sh` because the divergence-inducing change originates on the Terraform side. Overriding the default `max_connections` variable with a value lower than 10 should cause failure for this scenario.
+- `service_enablement` has two requirements and two separate corresponding divergence scripts.
